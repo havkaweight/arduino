@@ -10,20 +10,25 @@
 
 #include "HX711.h"
 
-HX711 scale(A1, A0);   // DT, CLK
+// HX711 circuit wiring
+const int LOADCELL_DOUT_PIN = 33;
+const int LOADCELL_SCK_PIN = 32;
 
-float calibration_factor = -3.7; // this calibration factor is adjusted according to my load cell
+HX711 scale;
+
+float calibration_factor = 15.65; // this calibration factor is adjusted according to my load cell
 float units;
 float ounces;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("HX711 calibration sketch");
   Serial.println("Remove all weight from scale");
   Serial.println("After readings begin, place known weight on scale");
   Serial.println("Press + or a to increase calibration factor");
   Serial.println("Press - or z to decrease calibration factor");
 
+  scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
   scale.set_scale();
   scale.tare();  //Reset the scale to 0
 
@@ -53,8 +58,8 @@ void loop() {
   {
     char temp = Serial.read();
     if(temp == '+' || temp == 'a')
-      calibration_factor += 1;
+      calibration_factor += 0.1;
     else if(temp == '-' || temp == 'z')
-      calibration_factor -= 1;
+      calibration_factor -= 0.1;
   }
 }

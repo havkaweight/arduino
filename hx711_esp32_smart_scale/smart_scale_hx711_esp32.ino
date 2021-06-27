@@ -1,5 +1,6 @@
 #include <HX711.h>
 
+
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -9,9 +10,12 @@ BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
 BLEAdvertising* pAdvertising = NULL;
 
+
+float calibration_factor = 15.65;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-int value = 0;
+float units;
+float grams;
 
 // Сайт для генерирования UUID:
 // https://www.uuidgenerator.net/
@@ -48,6 +52,8 @@ void setup() {
   
   // HX711 
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
+  scale.tare();  //Reset the scale to 0
+  scale.set_scale(calibration_factor);
 
   // BLE device
   BLEDevice::init("MyESP32"); // создаем BLE-устройство:
@@ -81,16 +87,24 @@ void setup() {
 void loop() {
 
   if (scale.is_ready()) {
-    value = scale.read();
+//    value = scale.read();
+    
+    units = scale.get_units(), 10;
+    if (units < 0)
+    {
+      units = 0.00;
+    }
+    grams = units * 0.035274;
+    
     if (deviceConnected) {  
       char txString[13];
-      dtostrf(value, 10, 3, txString);
+      dtostrf(grams, 10, 1, txString);
       pCharacteristic->setValue(txString);
       pCharacteristic->notify();
       //pCharacteristic->indicate();
       Serial.print("HX711 reading: ");
-      Serial.println(value);
-      Serial.printf("*** NOTIFY: %d ***\n", value);
+      Serial.println(grams);
+      Serial.printf("*** NOTIFY: %d ***\n", grams);
     } else {
       Serial.println("BLE device not found.");
     }
