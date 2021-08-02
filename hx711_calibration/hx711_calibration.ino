@@ -16,7 +16,8 @@ const int LOADCELL_SCK_PIN = 32;
 
 HX711 scale;
 
-float calibration_factor = 15.65; // this calibration factor is adjusted according to my load cell
+//float calibration_factor = 15.65; // this calibration factor is adjusted according to my load cell
+float calibration_factor = -423.45;
 float units;
 float ounces;
 
@@ -42,14 +43,16 @@ void loop() {
   scale.set_scale(calibration_factor); //Adjust to this calibration factor
 
   Serial.print("Reading: ");
-  units = scale.get_units(), 10;
+  units = scale.get_units(), 10; 
+  Serial.print(units);
+  Serial.print(" grams ");
   if (units < 0)
   {
     units = 0.00;
   }
   ounces = units * 0.035274;
   Serial.print(ounces);
-  Serial.print(" grams"); 
+  Serial.print(" ounce"); 
   Serial.print(" calibration_factor: ");
   Serial.print(calibration_factor);
   Serial.println();

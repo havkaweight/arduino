@@ -11,7 +11,7 @@ BLECharacteristic* pCharacteristic = NULL;
 BLEAdvertising* pAdvertising = NULL;
 
 
-float calibration_factor = 15.65;
+float calibration_factor = -423.45;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 float units;
@@ -21,7 +21,8 @@ float grams;
 // https://www.uuidgenerator.net/
 
 #define SERVICE_UUID        "f5ff08da-50b0-4a3e-b5e8-83509e584475"
-#define CHARACTERISTIC_UUID "25dbb242-e59b-452c-9a04-c37bdb92e00a"
+//#define CHARACTERISTIC_UUID "25dbb242-e59b-452c-9a04-c37bdb92e00a"
+#define CHARACTERISTIC_UUID "c455ab3b-f6e0-4002-ae3e-f109d03b1cd9"
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -103,7 +104,7 @@ void loop() {
       pCharacteristic->notify();
       //pCharacteristic->indicate();
       Serial.print("HX711 reading: ");
-      Serial.println(grams);
+      Serial.printf("*** Grams: %d ***\n", units);
       Serial.printf("*** NOTIFY: %d ***\n", grams);
     } else {
       Serial.println("BLE device not found.");
