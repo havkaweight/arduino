@@ -1,4 +1,5 @@
 #include <HX711.h>
+#include <string.h>
 
 
 #include <BLEDevice.h>
@@ -8,6 +9,7 @@
 
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
+BLECharacteristic* macCharacteristic = NULL;
 BLEAdvertising* pAdvertising = NULL;
 
 
@@ -21,8 +23,10 @@ float grams;
 // https://www.uuidgenerator.net/
 
 #define SERVICE_UUID        "f5ff08da-50b0-4a3e-b5e8-83509e584475"
-//#define CHARACTERISTIC_UUID "25dbb242-e59b-452c-9a04-c37bdb92e00a"
-#define CHARACTERISTIC_UUID "c455ab3b-f6e0-4002-ae3e-f109d03b1cd9"
+#define CHARACTERISTIC_UUID "25dbb242-e59b-452c-9a04-c37bdb92e00a"
+
+#define MAC_SERVICE_UUID        "11e12bc1-1c77-418e-a013-44dbecf33616"
+#define MAC_CHARACTERISTIC_UUID "c455ab3b-f6e0-4002-ae3e-f109d03b1cd9"
 
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
@@ -57,7 +61,7 @@ void setup() {
   scale.set_scale(calibration_factor);
 
   // BLE device
-  BLEDevice::init("MyESP32"); // создаем BLE-устройство:
+  BLEDevice::init("Havka"); // создаем BLE-устройство:
 
   pServer = BLEDevice::createServer(); // Создаем BLE-сервер
   pServer->setCallbacks(new MyServerCallbacks()); // Callback на подключение
@@ -76,13 +80,45 @@ void setup() {
   pCharacteristic->addDescriptor(new BLE2902()); // создаем BLE-дескриптор
 
   pService->start(); // запускаем сервис
+
+  BLEService *macService = pServer->createService(MAC_SERVICE_UUID); // Создаем BLE-сервис Device Info
+  
+  macCharacteristic = macService->createCharacteristic(
+      MAC_CHARACTERISTIC_UUID,
+      BLECharacteristic::PROPERTY_READ
+  ); // Создаем BLE-характеристику
+
+  // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
+  macCharacteristic->addDescriptor(new BLE2902()); // создаем BLE-дескриптор
+
+  static uint8_t mac_addr[6];
+  esp_efuse_mac_get_default(mac_addr);
+
+  char mac_address[12];
+
+  for (int i=0; i<6; i++)
+  {
+    if (i==5) {
+      mac_addr[i] = mac_addr[i]+2;
+    }
+    
+    String str_buffer = String(mac_addr[i], HEX);
+    
+    mac_address[i*2] = str_buffer[1];
+    mac_address[i*2+1] = str_buffer[0];
+  }
+  Serial.println(mac_address);
+
+  
+  macCharacteristic->setValue(mac_address);
+
+  macService->start(); // запускаем сервис
   
   pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(BLEUUID(SERVICE_UUID));
   set_advertising(); 
   pAdvertising->start(); // запускаем оповещения (advertising)
   Serial.println("Waiting a client connection to notify...");  //  "Ждем подключения клиента, чтобы отправить ему уведомление..."
-
 }
  
 void loop() {
@@ -95,7 +131,7 @@ void loop() {
     {
       units = 0.00;
     }
-    grams = units * 0.035274;
+    grams = units;// * 0.035274;
     
     if (deviceConnected) {  
       char txString[13];

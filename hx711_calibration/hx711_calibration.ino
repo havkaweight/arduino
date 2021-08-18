@@ -36,33 +36,44 @@ void setup() {
   long zero_factor = scale.read_average(); //Get a baseline reading
   Serial.print("Zero factor: "); //This can be used to remove the need to tare the scale. Useful in permanent scale projects.
   Serial.println(zero_factor);
+
+  static uint8_t mac_addr[6];
+  esp_efuse_mac_get_default(mac_addr);
+
+  for (int i=0; i<5; i++)
+  {
+    Serial.print(mac_addr[i]);
+    Serial.print(':');
+  }
+  Serial.print(mac_addr[5]);
+  
 }
 
 void loop() {
-
-  scale.set_scale(calibration_factor); //Adjust to this calibration factor
-
-  Serial.print("Reading: ");
-  units = scale.get_units(), 10; 
-  Serial.print(units);
-  Serial.print(" grams ");
-  if (units < 0)
-  {
-    units = 0.00;
-  }
-  ounces = units * 0.035274;
-  Serial.print(ounces);
-  Serial.print(" ounce"); 
-  Serial.print(" calibration_factor: ");
-  Serial.print(calibration_factor);
-  Serial.println();
-
-  if(Serial.available())
-  {
-    char temp = Serial.read();
-    if(temp == '+' || temp == 'a')
-      calibration_factor += 0.1;
-    else if(temp == '-' || temp == 'z')
-      calibration_factor -= 0.1;
-  }
+//
+//  scale.set_scale(calibration_factor); //Adjust to this calibration factor
+//
+//  Serial.print("Reading: ");
+//  units = scale.get_units(), 10; 
+//  Serial.print(units);
+//  Serial.print(" grams ");
+//  if (units < 0)
+//  {
+//    units = 0.00;
+//  }
+//  ounces = units * 0.035274;
+//  Serial.print(ounces);
+//  Serial.print(" ounce"); 
+//  Serial.print(" calibration_factor: ");
+//  Serial.print(calibration_factor);
+//  Serial.println();
+//
+//  if(Serial.available())
+//  {
+//    char temp = Serial.read();
+//    if(temp == '+' || temp == 'a')
+//      calibration_factor += 0.1;
+//    else if(temp == '-' || temp == 'z')
+//      calibration_factor -= 0.1;
+//  }
 }
