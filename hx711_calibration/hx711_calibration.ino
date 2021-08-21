@@ -17,7 +17,7 @@ const int LOADCELL_SCK_PIN = 32;
 HX711 scale;
 
 //float calibration_factor = 15.65; // this calibration factor is adjusted according to my load cell
-float calibration_factor = -423.45;
+float calibration_factor = -446.35; // Pasha's scale
 float units;
 float ounces;
 
@@ -50,30 +50,30 @@ void setup() {
 }
 
 void loop() {
-//
-//  scale.set_scale(calibration_factor); //Adjust to this calibration factor
-//
-//  Serial.print("Reading: ");
-//  units = scale.get_units(), 10; 
-//  Serial.print(units);
-//  Serial.print(" grams ");
-//  if (units < 0)
-//  {
-//    units = 0.00;
-//  }
-//  ounces = units * 0.035274;
-//  Serial.print(ounces);
-//  Serial.print(" ounce"); 
-//  Serial.print(" calibration_factor: ");
-//  Serial.print(calibration_factor);
-//  Serial.println();
-//
-//  if(Serial.available())
-//  {
-//    char temp = Serial.read();
-//    if(temp == '+' || temp == 'a')
-//      calibration_factor += 0.1;
-//    else if(temp == '-' || temp == 'z')
-//      calibration_factor -= 0.1;
-//  }
+
+  scale.set_scale(calibration_factor); //Adjust to this calibration factor
+
+  Serial.print("Reading: ");
+  units = scale.get_units(), 10; 
+  Serial.print(units);
+  Serial.print(" grams ");
+  if (units < 0)
+  {
+    units = 0.00;
+  }
+  ounces = units;// * 0.035274;
+  Serial.print(ounces);
+  Serial.print(" ounce"); 
+  Serial.print(" calibration_factor: ");
+  Serial.print(calibration_factor);
+  Serial.println();
+
+  if(Serial.available())
+  {
+    char temp = Serial.read();
+    if(temp == '+' || temp == 'a')
+      calibration_factor += 0.1;
+    else if(temp == '-' || temp == 'z')
+      calibration_factor -= 0.1;
+  }
 }

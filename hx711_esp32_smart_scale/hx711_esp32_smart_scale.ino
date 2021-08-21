@@ -1,6 +1,4 @@
 #include <HX711.h>
-#include <string.h>
-
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
@@ -12,11 +10,9 @@ BLECharacteristic* pCharacteristic = NULL;
 BLECharacteristic* macCharacteristic = NULL;
 BLEAdvertising* pAdvertising = NULL;
 
-
-float calibration_factor = -423.45;
+float calibration_factor = -446.35; // Pasha's scale
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-float units;
 float grams;
 
 // Сайт для генерирования UUID:
@@ -61,7 +57,7 @@ void setup() {
   scale.set_scale(calibration_factor);
 
   // BLE device
-  BLEDevice::init("Havka"); // создаем BLE-устройство:
+  BLEDevice::init("Havka Scale"); // создаем BLE-устройство:
 
   pServer = BLEDevice::createServer(); // Создаем BLE-сервер
   pServer->setCallbacks(new MyServerCallbacks()); // Callback на подключение
@@ -71,9 +67,7 @@ void setup() {
   pCharacteristic = pService->createCharacteristic(
       CHARACTERISTIC_UUID,
       BLECharacteristic::PROPERTY_READ   |
-      BLECharacteristic::PROPERTY_WRITE  |
-      BLECharacteristic::PROPERTY_NOTIFY |
-      BLECharacteristic::PROPERTY_INDICATE
+      BLECharacteristic::PROPERTY_NOTIFY
   ); // Создаем BLE-характеристику
 
   // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
@@ -126,22 +120,19 @@ void loop() {
   if (scale.is_ready()) {
 //    value = scale.read();
     
-    units = scale.get_units(), 10;
-    if (units < 0)
+    grams = scale.get_units(), 10;
+    if (grams < 0)
     {
-      units = 0.00;
+      grams = 0.00;
     }
-    grams = units;// * 0.035274;
     
     if (deviceConnected) {  
       char txString[13];
       dtostrf(grams, 10, 1, txString);
       pCharacteristic->setValue(txString);
       pCharacteristic->notify();
-      //pCharacteristic->indicate();
       Serial.print("HX711 reading: ");
-      Serial.printf("*** Grams: %d ***\n", units);
-      Serial.printf("*** NOTIFY: %d ***\n", grams);
+      Serial.printf("*** Grams: %d ***\n", grams);
     } else {
       Serial.println("BLE device not found.");
     }
