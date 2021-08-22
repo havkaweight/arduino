@@ -1,14 +1,16 @@
 #include <HX711.h>
 
+
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
 
-BLEServer* pServer = NULL;
-BLECharacteristic* pCharacteristic = NULL;
-BLECharacteristic* macCharacteristic = NULL;
-BLEAdvertising* pAdvertising = NULL;
+BLEServer *pServer = NULL;
+BLECharacteristic *pCharacteristic = NULL;
+BLECharacteristic *macCharacteristic = NULL;
+BLEAdvertising *pAdvertising = NULL;
+
 
 float calibration_factor = -446.35; // Pasha's scale
 bool deviceConnected = false;
@@ -25,11 +27,11 @@ float grams;
 #define MAC_CHARACTERISTIC_UUID "c455ab3b-f6e0-4002-ae3e-f109d03b1cd9"
 
 class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
+    void onConnect(BLEServer *pServer) {
       deviceConnected = true;
     };
 
-    void onDisconnect(BLEServer* pServer) {
+    void onDisconnect(BLEServer *pServer) {
       deviceConnected = false;
     }
 };
@@ -41,13 +43,6 @@ const int LOADCELL_SCK_PIN = 32;
  
 HX711 scale;
 
-void set_advertising() {
-  BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-  std::string ass_data = "lolkek";
-  oAdvertisementData.setServiceData(BLEUUID(SERVICE_UUID), ass_data);
-  pAdvertising->setAdvertisementData(oAdvertisementData);
-}
-
 void setup() {
   Serial.begin(115200);
   
@@ -57,7 +52,7 @@ void setup() {
   scale.set_scale(calibration_factor);
 
   // BLE device
-  BLEDevice::init("Havka Scale"); // создаем BLE-устройство:
+  BLEDevice::init("MyESP32"); // создаем BLE-устройство:
 
   pServer = BLEDevice::createServer(); // Создаем BLE-сервер
   pServer->setCallbacks(new MyServerCallbacks()); // Callback на подключение
@@ -67,7 +62,9 @@ void setup() {
   pCharacteristic = pService->createCharacteristic(
       CHARACTERISTIC_UUID,
       BLECharacteristic::PROPERTY_READ   |
-      BLECharacteristic::PROPERTY_NOTIFY
+      BLECharacteristic::PROPERTY_WRITE  |
+      BLECharacteristic::PROPERTY_NOTIFY |
+      BLECharacteristic::PROPERTY_INDICATE
   ); // Создаем BLE-характеристику
 
   // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
@@ -103,14 +100,18 @@ void setup() {
   }
   Serial.println(mac_address);
 
-  
   macCharacteristic->setValue(mac_address);
 
-  macService->start(); // запускаем сервис
-  
+  macService->start();
+
   pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(BLEUUID(SERVICE_UUID));
-  set_advertising(); 
+  pAdvertising->addServiceUUID(BLEUUID(MAC_SERVICE_UUID));
+  
+  BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+  std::string scale_data = "scale";
+  oAdvertisementData.setServiceData(BLEUUID(MAC_SERVICE_UUID), scale_data);
+  
+  pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->start(); // запускаем оповещения (advertising)
   Serial.println("Waiting a client connection to notify...");  //  "Ждем подключения клиента, чтобы отправить ему уведомление..."
 }
@@ -131,6 +132,7 @@ void loop() {
       dtostrf(grams, 10, 1, txString);
       pCharacteristic->setValue(txString);
       pCharacteristic->notify();
+      //pCharacteristic->indicate();
       Serial.print("HX711 reading: ");
       Serial.printf("*** Grams: %d ***\n", grams);
     } else {
