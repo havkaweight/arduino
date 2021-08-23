@@ -40,40 +40,50 @@ void setup() {
   static uint8_t mac_addr[6];
   esp_efuse_mac_get_default(mac_addr);
 
-  for (int i=0; i<5; i++)
+  char mac_address[13];
+
+  for (int i=0; i<6; i++)
   {
-    Serial.print(mac_addr[i]);
-    Serial.print(':');
+    if (i==5) {
+      mac_addr[i] = mac_addr[i]+2;
+    }
+    
+    String str_buffer = String(mac_addr[i], HEX);
+    Serial.println(mac_addr[i], HEX);
+    Serial.println(":");
+    
+    mac_address[i*2] = str_buffer[1];
+    mac_address[i*2+1] = str_buffer[0];
   }
-  Serial.print(mac_addr[5]);
+  Serial.println(mac_address);
   
 }
 
 void loop() {
-
-  scale.set_scale(calibration_factor); //Adjust to this calibration factor
-
-  Serial.print("Reading: ");
-  units = scale.get_units(), 10; 
-  Serial.print(units);
-  Serial.print(" grams ");
-  if (units < 0)
-  {
-    units = 0.00;
-  }
-  ounces = units;// * 0.035274;
-  Serial.print(ounces);
-  Serial.print(" ounce"); 
-  Serial.print(" calibration_factor: ");
-  Serial.print(calibration_factor);
-  Serial.println();
-
-  if(Serial.available())
-  {
-    char temp = Serial.read();
-    if(temp == '+' || temp == 'a')
-      calibration_factor += 0.1;
-    else if(temp == '-' || temp == 'z')
-      calibration_factor -= 0.1;
-  }
+//
+//  scale.set_scale(calibration_factor); //Adjust to this calibration factor
+//
+//  Serial.print("Reading: ");
+//  units = scale.get_units(), 10; 
+//  Serial.print(units);
+//  Serial.print(" grams ");
+//  if (units < 0)
+//  {
+//    units = 0.00;
+//  }
+//  ounces = units;// * 0.035274;
+//  Serial.print(ounces);
+//  Serial.print(" ounce"); 
+//  Serial.print(" calibration_factor: ");
+//  Serial.print(calibration_factor);
+//  Serial.println();
+//
+//  if(Serial.available())
+//  {
+//    char temp = Serial.read();
+//    if(temp == '+' || temp == 'a')
+//      calibration_factor += 0.1;
+//    else if(temp == '-' || temp == 'z')
+//      calibration_factor -= 0.1;
+//  }
 }

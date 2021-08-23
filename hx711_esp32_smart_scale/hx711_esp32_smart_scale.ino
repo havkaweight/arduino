@@ -85,7 +85,9 @@ void setup() {
   static uint8_t mac_addr[6];
   esp_efuse_mac_get_default(mac_addr);
 
-  char mac_address[12];
+  // Note that when declaring an array of type char, one more element than your initialization is required, to hold the required null character.
+  // https://www.arduino.cc/reference/en/language/variables/data-types/array/
+  char mac_address[13] = "000000000000";
 
   for (int i=0; i<6; i++)
   {
@@ -98,6 +100,7 @@ void setup() {
     mac_address[i*2] = str_buffer[1];
     mac_address[i*2+1] = str_buffer[0];
   }
+  
   Serial.println(mac_address);
 
   macCharacteristic->setValue(mac_address);
